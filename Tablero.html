@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tablero de actividades para seguimiento PMO y TI">
+  <title>Tablero de Actividades · PMO/TI</title>
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-shell container-fluid px-3 px-lg-4">
+    <nav class="app-navbar navbar" aria-label="Navegación y controles del tablero">
+      <div class="container-fluid flex-column align-items-stretch px-0">
+        <div class="navbar-main d-flex align-items-center justify-content-between gap-3">
+          <div class="brand-block navbar-brand me-auto">
+            <p class="brand-eyebrow mb-1">TI · GRUPO CCIMA</p>
+            <h1 class="mb-0">Tablero de Actividades</h1>
+            <p class="header-sub mb-0">Seguimiento de actividades</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="theme-switch-label d-none d-sm-inline" id="themeLabel">Modo oscuro</span>
+            <button class="theme-switch" id="themeToggleBtn" type="button" role="switch" aria-checked="true" aria-label="Cambiar entre modo claro y oscuro">
+              <span class="theme-switch-knob"></span>
+            </button>
+          </div>
+        </div>
+        <div class="navbar-divider"></div>
+        <div class="navbar-actions d-flex justify-content-end flex-wrap gap-2">
+          <button class="btn btn-soft" id="settingsBtn" type="button">⚙ Configuración</button>
+          <button class="btn btn-soft" id="kpiBtn" type="button">📈 Indicadores</button>
+          <button class="btn btn-soft" id="historyBtn" type="button">📊 Histórico</button>
+          <button class="btn btn-soft" id="archiveDoneBtn" type="button">Archivar completadas</button>
+          <button class="btn btn-primary" id="openAddBtn" type="button">+ Nueva actividad</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="quick-add-bar card border-0" aria-label="Captura rápida">
+      <div class="card-body d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
+        <span class="quick-add-icon" aria-hidden="true">✎</span>
+        <label class="visually-hidden" for="quickAddInput">Nueva actividad rápida</label>
+        <input class="form-control" type="text" id="quickAddInput" placeholder="Anota cualquier actividad aquí" autocomplete="off">
+        <button class="btn btn-primary flex-shrink-0" id="quickAddBtn" type="button">+ Anotar</button>
+      </div>
+    </section>
+
+    <main class="board-layout">
+      <section class="board-column card" id="col-pendiente" data-status="pendiente">
+        <div class="card-body d-flex flex-column">
+          <div class="column-head">
+            <h2 class="column-title"><span class="column-index">1</span>Pendiente</h2>
+            <span class="column-count badge rounded-pill" id="count-pendiente">0</span>
+          </div>
+          <div class="card-list" id="list-pendiente"></div>
+          <button class="column-add btn" type="button" data-status="pendiente">+ Agregar aquí</button>
+        </div>
+      </section>
+
+      <section class="board-column card" id="col-haciendo" data-status="haciendo">
+        <div class="card-body d-flex flex-column">
+          <div class="column-head">
+            <h2 class="column-title"><span class="column-index">2</span>En curso</h2>
+            <span class="column-count badge rounded-pill" id="count-haciendo">0</span>
+          </div>
+          <div class="card-list" id="list-haciendo"></div>
+          <button class="column-add btn" type="button" data-status="haciendo">+ Agregar aquí</button>
+        </div>
+      </section>
+
+      <section class="board-column card" id="col-hecho" data-status="hecho">
+        <div class="card-body d-flex flex-column">
+          <div class="column-head">
+            <h2 class="column-title"><span class="column-index">3</span>Completado</h2>
+            <div class="column-head-actions">
+              <span class="column-count badge rounded-pill" id="count-hecho">0</span>
+              <button class="section-toggle completed-toggle" id="hideCompletedBtn" type="button" aria-expanded="true" aria-controls="col-hecho" title="Ocultar completadas">
+                <span aria-hidden="true">›</span>
+                <span class="visually-hidden">Ocultar completadas</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-list" id="list-hecho"></div>
+          <button class="column-add btn" type="button" data-status="hecho">+ Agregar aquí</button>
+        </div>
+      </section>
+
+      <aside class="recurring-panel card" id="recurringPanel">
+        <div class="card-body">
+          <div class="column-head recurring-head">
+            <h2 class="column-title">◓ Recurrentes</h2>
+            <div class="column-head-actions">
+              <span class="column-count badge rounded-pill" id="count-recurrentes">0</span>
+              <button class="section-toggle recurring-toggle" id="hideRecurringBtn" type="button" aria-expanded="true" aria-controls="recurringPanel" title="Ocultar recurrentes">
+                <span aria-hidden="true">›</span>
+                <span class="visually-hidden">Ocultar recurrentes</span>
+              </button>
+            </div>
+          </div>
+          <p class="sidebar-description">Tareas que haces seguido. Usa “Usar ahora” para enviar una copia a Pendiente.</p>
+          <div id="recList"></div>
+          <button class="column-add btn w-100" id="openAddRecBtn" type="button">+ Nueva tarea recurrente</button>
+        </div>
+      </aside>
+      <div class="collapsed-sections-rail" id="collapsedSectionsRail" hidden>
+        <button class="section-reveal recurring-reveal btn" id="showRecurringBtn" type="button" aria-controls="recurringPanel" aria-expanded="false" hidden>
+          <span class="recurring-reveal-icon" aria-hidden="true">‹</span>
+          <span class="recurring-reveal-label">Recurrentes</span>
+          <span class="reveal-count" id="recurringRevealCount">0</span>
+        </button>
+        <button class="section-reveal completed-reveal btn" id="showCompletedBtn" type="button" aria-controls="col-hecho" aria-expanded="false" hidden>
+          <span class="recurring-reveal-icon" aria-hidden="true">‹</span>
+          <span class="recurring-reveal-label">Completado</span>
+          <span class="reveal-count" id="completedRevealCount">0</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="taskModalTitle">Nueva actividad</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="taskForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="taskTitle">Título</label>
+              <input class="form-control" type="text" id="taskTitle" placeholder="Ej. Seguimiento Hito I con BELMEN" required>
+              <div class="invalid-feedback">Escribe un título.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="taskImportance">Grado de importancia</label>
+              <select class="form-select" id="taskImportance">
+                <option value="baja">Baja · Puede esperar</option>
+                <option value="media" selected>Media · Programar</option>
+                <option value="alta">Alta · Atender pronto</option>
+                <option value="critica">Crítica · Atender de inmediato</option>
+              </select>
+              <div class="form-text">Clasifica la actividad por el nivel de atención que requiere.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="taskStatus">Estado inicial</label>
+              <select class="form-select" id="taskStatus">
+                <option value="pendiente">Pendiente</option>
+                <option value="haciendo">En curso</option>
+                <option value="hecho">Completado</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="taskNotes">Notas <span class="optional">(opcional)</span></label>
+              <textarea class="form-control" id="taskNotes" rows="4" placeholder="Escribe el primer punto..."></textarea>
+              <div class="form-text">Presiona Enter para agregar otro punto a la lista.</div>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="taskStart">Fecha de inicio</label>
+                <input class="form-control" type="date" id="taskStart">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="taskDue">Fecha de entrega</label>
+                <input class="form-control" type="date" id="taskDue">
+                <div class="invalid-feedback">La fecha de entrega debe ser igual o posterior a la fecha de inicio.</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="taskActualDelivery">Fecha real de entrega</label>
+                <input class="form-control" type="date" id="taskActualDelivery">
+                <div class="invalid-feedback">Debe estar entre la fecha de inicio y el día de hoy.</div>
+                <div class="form-text" id="actualDeliveryHint">Disponible cuando la actividad está En curso.</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="taskTimeSpent">Tiempo registrado (min)</label>
+                <input class="form-control" type="number" id="taskTimeSpent" value="0" min="0">
+                <div class="form-text" id="workScheduleHint">El temporizador registra únicamente de lunes a viernes, de 08:00 a 17:30.</div>
+              </div>
+            </div>
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" id="taskRecurrente">
+              <label class="form-check-label" for="taskRecurrente">También guardar como tarea recurrente</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-soft" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" id="saveTaskBtn" type="submit" form="taskForm">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="recModal" tabindex="-1" aria-labelledby="recModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="recModalTitle">Nueva tarea recurrente</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="recForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="recTitle">Título</label>
+              <input class="form-control" type="text" id="recTitle" placeholder="Ej. Minuta reunión con BELMEN" required>
+              <div class="invalid-feedback">Escribe un título.</div>
+            </div>
+            <div>
+              <label class="form-label" for="recFreq">¿Cada cuándo?</label>
+              <input class="form-control" type="text" id="recFreq" placeholder="Ej. Cada reunión con el proveedor">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-soft" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit" form="recForm">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="kpiModal" tabindex="-1" aria-labelledby="kpiModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="kpiModalTitle">Indicadores</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="kpiStrip"></div>
+          <p class="modal-note mb-0" id="kpiModalNote">Los tiempos reflejan el registro real de los temporizadores y las actividades archivadas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="historyModalTitle">Histórico semanal</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body" id="historyContent"></div>
+        <div class="modal-footer justify-content-between">
+          <p class="modal-note mb-0">Las actividades completadas se archivan automáticamente al comenzar una semana nueva.</p>
+          <button class="btn btn-outline-danger" id="clearHistoryBtn" type="button">Vaciar histórico</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title" id="settingsModalTitle">Configuración</h2>
+            <p class="modal-note mt-1 mb-0">Personaliza el horario, la apariencia y tus respaldos locales.</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="settingsForm" novalidate>
+            <section class="settings-section">
+              <h3 class="settings-title">Jornada laboral</h3>
+              <p class="settings-description">Los temporizadores solo registran tiempo de lunes a viernes dentro de este horario.</p>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label" for="workdayStart">Hora de inicio</label>
+                  <input class="form-control" type="time" id="workdayStart" required>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="workdayEnd">Hora de fin</label>
+                  <input class="form-control" type="time" id="workdayEnd" required>
+                  <div class="invalid-feedback">La hora de fin debe ser posterior a la hora de inicio.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h3 class="settings-title">Apariencia</h3>
+              <p class="settings-description">Selecciona el modo de visualización y una paleta orientada a la concentración.</p>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label" for="settingsThemeMode">Modo</label>
+                  <select class="form-select" id="settingsThemeMode">
+                    <option value="light">Claro</option>
+                    <option value="dark">Oscuro</option>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="colorPreset">Tema de colores</label>
+                  <select class="form-select" id="colorPreset">
+                    <option value="focus">Enfoque azul</option>
+                    <option value="ocean">Océano</option>
+                    <option value="forest">Bosque</option>
+                    <option value="sunset">Atardecer</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-sm btn-soft" id="resetPaletteBtn" type="button">Restablecer colores predeterminados</button>
+              </div>
+
+              <div class="custom-palette mt-3" id="customPaletteFields" hidden>
+                <h4 class="custom-palette-title mb-2">Colores personalizados</h4>
+                <p class="settings-description">Escribe colores HEX completos, por ejemplo <code>#245FBE</code>.</p>
+                <div class="row g-2">
+                  <div class="col-6 col-md-4">
+                    <label class="form-label" for="colorPrimary">Principal</label>
+                    <input class="form-control color-hex-input" id="colorPrimary" type="text" maxlength="7" placeholder="#245FBE">
+                  </div>
+                  <div class="col-6 col-md-4">
+                    <label class="form-label" for="colorPending">Pendiente</label>
+                    <input class="form-control color-hex-input" id="colorPending" type="text" maxlength="7" placeholder="#B96808">
+                  </div>
+                  <div class="col-6 col-md-4">
+                    <label class="form-label" for="colorDoing">En curso</label>
+                    <input class="form-control color-hex-input" id="colorDoing" type="text" maxlength="7" placeholder="#2368C4">
+                  </div>
+                  <div class="col-6 col-md-4">
+                    <label class="form-label" for="colorDone">Completado</label>
+                    <input class="form-control color-hex-input" id="colorDone" type="text" maxlength="7" placeholder="#177245">
+                  </div>
+                  <div class="col-6 col-md-4">
+                    <label class="form-label" for="colorRecurring">Recurrentes</label>
+                    <input class="form-control color-hex-input" id="colorRecurring" type="text" maxlength="7" placeholder="#7042B5">
+                  </div>
+                  <div class="col-6 col-md-4">
+                    <label class="form-label" for="colorDanger">Crítico</label>
+                    <input class="form-control color-hex-input" id="colorDanger" type="text" maxlength="7" placeholder="#C92A38">
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-section mb-0">
+              <h3 class="settings-title">Importar y exportar</h3>
+              <p class="settings-description">Descarga un respaldo JSON o restaura uno creado previamente por este tablero.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-soft" id="exportDataBtn" type="button">↓ Exportar datos</button>
+                <button class="btn btn-soft" id="importDataBtn" type="button">↑ Importar datos</button>
+                <input class="visually-hidden" id="importDataInput" type="file" accept=".json,application/json">
+              </div>
+              <div class="excel-export-card d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mt-3">
+                <div>
+                  <h4 class="custom-palette-title mb-1">Reporte de Excel</h4>
+                  <p class="settings-description mb-0">Genera un libro con todas las actividades actuales y archivadas.</p>
+                </div>
+                <button class="btn btn-success flex-shrink-0" id="exportExcelBtn" type="button">▦ Exportar Excel</button>
+              </div>
+            </section>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-soft" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit" form="settingsForm">Guardar configuración</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="confirmModalTitle">Confirmar acción</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-message mb-0" id="confirmModalMessage"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-soft" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" id="confirmActionBtn" type="button">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast border-0" id="appToast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMessage"></div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="vendor/exceljs/exceljs.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
